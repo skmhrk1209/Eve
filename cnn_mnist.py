@@ -168,7 +168,7 @@ def main(unused_argv):
         steps=20000,
         hooks=[
             tf.train.LoggingTensorHook(
-                tensors={"probabilities": "softmax_tensor"},
+                tensors={"probabilities": "softmax"},
                 every_n_iter=100
             )
         ]
