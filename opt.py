@@ -79,11 +79,6 @@ class EveOptimizer(optimizer.Optimizer):
     See [Hayashi et al., 2016](https://arxiv.org/pdf/1611.01505.pdf)
     """
 
-    # Values for gate_gradients.
-    GATE_NONE = 0
-    GATE_OP = 1
-    GATE_GRAPH = 2
-
     def __init__(self, alpha1=1e-3, beta1=0.9, beta2=0.999, beta3=0.999,
                  clip_value=10, epsilon=1e-8, use_locking=False, name="Eve"):
         """Construct a new Eve optimizer.
@@ -170,7 +165,7 @@ class EveOptimizer(optimizer.Optimizer):
         )
 
     def minimize(self, loss, global_step=None, var_list=None,
-                 gate_gradients=GATE_OP, aggregation_method=None,
+                 gate_gradients=optimizer.Optimizer.GATE_OP, aggregation_method=None,
                  colocate_gradients_with_ops=False, name=None, grad_loss=None):
         """Add operations to minimize `loss` by updating `var_list`.
         This method simply combines calls `compute_gradients()` and
