@@ -21,20 +21,8 @@ def cnn_classifier(features, labels, mode, params):
         kernel_size=[5, 5],
         strides=[1, 1],
         padding="same",
-        use_bias=False
+        activation=tf.nn.relu
     )
-    # Batch Normalization Layer #1
-    # Input Tensor Shape: [batch_size, 28, 28, 32]
-    # Output Tensor Shape: [batch_size, 28, 28, 32]
-    inputs = tf.layers.batch_normalization(
-        inputs=inputs,
-        axis=-1,
-        training=mode == tf.estimator.ModeKeys.TRAIN
-    )
-    # Activation Layer #1
-    # Input Tensor Shape: [batch_size, 28, 28, 32]
-    # Output Tensor Shape: [batch_size, 28, 28, 32]
-    inputs = tf.nn.relu(inputs)
     # Pooling Layer #1
     # First max pooling layer with a 2x2 filter and stride of 2
     # Input Tensor Shape: [batch_size, 28, 28, 32]
@@ -56,20 +44,8 @@ def cnn_classifier(features, labels, mode, params):
         kernel_size=[5, 5],
         strides=[1, 1],
         padding="same",
-        use_bias=False
+        activation=tf.nn.relu
     )
-    # Batch Normalization Layer #2
-    # Input Tensor Shape: [batch_size, 14, 14, 64]
-    # Output Tensor Shape: [batch_size, 14, 14, 64]
-    inputs = tf.layers.batch_normalization(
-        inputs=inputs,
-        axis=-1,
-        training=mode == tf.estimator.ModeKeys.TRAIN
-    )
-    # Activation Layer #2
-    # Input Tensor Shape: [batch_size, 14, 14, 64]
-    # Output Tensor Shape: [batch_size, 14, 14, 64]
-    inputs = tf.nn.relu(inputs)
     # Pooling Layer #2
     # Second max pooling layer with a 2x2 filter and stride of 2
     # Input Tensor Shape: [batch_size, 14, 14, 64]
