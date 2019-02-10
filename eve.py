@@ -88,48 +88,25 @@ class EveOptimizer(optimizer.Optimizer):
     GATE_GRAPH = 2
 
     def __init__(self, alpha1=1e-3, beta1=0.9, beta2=0.999, beta3=0.999,
-                 clip_value=10, epsilon=1e-8, use_locking=False, name="Adam"):
+                 clip_value=10, epsilon=1e-8, use_locking=False, name="Eve"):
         """Construct a new Eve optimizer.
-        Initialization:
-        $$m_0 := 0 \text{(Initialize initial 1st moment vector)}$$
-        $$v_0 := 0 \text{(Initialize initial 2nd moment vector)}$$
-        $$t := 0 \text{(Initialize timestep)}$$
-        The update rule for `variable` with gradient `g` uses an optimization
-        described at the end of section2 of the paper:
-        $$t := t + 1$$
-        $$lr_t := \text{learning\_rate} * \sqrt{1 - beta_2^t} / (1 - beta_1^t)$$
-        $$m_t := beta_1 * m_{t-1} + (1 - beta_1) * g$$
-        $$v_t := beta_2 * v_{t-1} + (1 - beta_2) * g * g$$
-        $$variable := variable - lr_t * m_t / (\sqrt{v_t} + \epsilon)$$
-        The default value of 1e-8 for epsilon might not be a good default in
-        general. For example, when training an Inception network on ImageNet a
-        current good choice is 1.0 or 0.1. Note that since AdamOptimizer uses the
-        formulation just before Section 2.1 of the Kingma and Ba paper rather than
-        the formulation in Algorithm 1, the "epsilon" referred to here is "epsilon
-        hat" in the paper.
-        The sparse implementation of this algorithm (used when the gradient is an
-        IndexedSlices object, typically because of `tf.gather` or an embedding
-        lookup in the forward pass) does apply momentum to variable slices even if
-        they were not used in the forward pass (meaning they have a gradient equal
-        to zero). Momentum decay (beta1) is also applied to the entire momentum
-        accumulator. This means that the sparse behavior is equivalent to the dense
-        behavior (in contrast to some momentum implementations which ignore momentum
-        unless a variable slice was actually used).
         Args:
-          learning_rate: A Tensor or a floating point value.  The learning rate.
+          alpha1: A Tensor or a floating point value.  
+            The learning rate.
           beta1: A float value or a constant float tensor.
             The exponential decay rate for the 1st moment estimates.
           beta2: A float value or a constant float tensor.
             The exponential decay rate for the 2nd moment estimates.
-          epsilon: A small constant for numerical stability. This epsilon is
-            "epsilon hat" in the Kingma and Ba paper (in the formula just before
-            Section 2.1), not the epsilon in Algorithm 1 of the paper.
+          beta3: A float value or a constant float tensor.
+            The exponential decay rate for computing relative change.
+          epsilon: A float value or a constant float tensor.
+            A small constant for numerical stability. 
           use_locking: If True use locks for update operations.
           name: Optional name for the operations created when applying gradients.
-            Defaults to "Adam".
+            Defaults to "Eve".
         @compatibility(eager)
-        When eager execution is enabled, `learning_rate`, `beta1`, `beta2`, and
-        `epsilon` can each be a callable that takes no arguments and returns the
+        When eager execution is enabled, `alpha1`, `beta1`, `beta2`, `beta3`, `clip_value`, 
+        and `epsilon` can each be a callable that takes no arguments and returns the
         actual value to use. This can be useful for changing these values across
         different invocations of optimizer functions.
         @end_compatibility
@@ -141,12 +118,6 @@ class EveOptimizer(optimizer.Optimizer):
         self.beta3 = beta3
         self.clip_value = clip_value
         self.epsilon = epsilon
-
-    def _get_beta_accumulators(self):
-        with ops.init_scope():
-            graph = None if context.executing_eagerly() else ops.get_default_graph()
-            return (self._get_non_slot_variable("beta1_power", graph=graph),
-                    self._get_non_slot_variable("beta2_power", graph=graph))
 
     def _create_slots(self, var_list):
         # Create the beta1 and beta2 accumulators on the same device as the first
@@ -169,7 +140,6 @@ class EveOptimizer(optimizer.Optimizer):
             name="prev_loss",
             colocate_with=first_var
         )
-
         # Create slots for the first and second moments.
         for var in var_list:
             self._zeros_slot(var, "m", self._name)
@@ -177,7 +147,6 @@ class EveOptimizer(optimizer.Optimizer):
             self._zeros_slot(var, "d", self._name)
 
     def _prepare(self):
-
         self.alpha1 = ops.convert_to_tensor(
             value=self._call_if_callable(self.alpha1),
             name="alpha1"
@@ -205,8 +174,7 @@ class EveOptimizer(optimizer.Optimizer):
 
     def minimize(self, loss, global_step=None, var_list=None,
                  gate_gradients=GATE_OP, aggregation_method=None,
-                 colocate_gradients_with_ops=False, name=None,
-                 grad_loss=None):
+                 colocate_gradients_with_ops=False, name=None, grad_loss=None):
         """Add operations to minimize `loss` by updating `var_list`.
         This method simply combines calls `compute_gradients()` and
         `apply_gradients()`. If you want to process the gradient before applying
@@ -251,9 +219,7 @@ class EveOptimizer(optimizer.Optimizer):
             grad_loss=grad_loss
         )
 
-        vars_with_grad = [var for grad, var in grads_and_vars if grad is not None]
-
-        if not vars_with_grad:
+        if not [var for grad, var in grads_and_vars if grad is not None]:
             raise ValueError(
                 "No gradients provided for any variable, check your graph for ops"
                 " that do not support gradients, between variables %s and loss %s." %
