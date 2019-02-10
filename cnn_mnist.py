@@ -29,9 +29,22 @@ def cnn_model_fn(features, labels, mode):
         inputs=inputs,
         filters=32,
         kernel_size=[5, 5],
-        padding="same",
-        activation=tf.nn.relu
+        strides=[1, 1],
+        padding="same"
+        use_bias=False
     )
+    # Batch Normalization Layer #1
+    # Input Tensor Shape: [batch_size, 28, 28, 32]
+    # Output Tensor Shape: [batch_size, 28, 28, 32]
+    inputs = tf.layers.batch_normalization(
+        inputs=inputs,
+        axis=-1,
+        training=mode == tf.estimator.ModeKeys.TRAIN
+    )
+    # Activation Layer #1
+    # Input Tensor Shape: [batch_size, 28, 28, 32]
+    # Output Tensor Shape: [batch_size, 28, 28, 32]
+    inputs = tf.nn.relu(inputs)
     # Pooling Layer #1
     # First max pooling layer with a 2x2 filter and stride of 2
     # Input Tensor Shape: [batch_size, 28, 28, 32]
@@ -39,7 +52,8 @@ def cnn_model_fn(features, labels, mode):
     inputs = tf.layers.max_pooling2d(
         inputs=inputs,
         pool_size=[2, 2],
-        strides=[2, 2]
+        strides=[2, 2],
+        padding="same"
     )
     # Convolutional Layer #2
     # Computes 64 features using a 5x5 filter.
@@ -50,9 +64,22 @@ def cnn_model_fn(features, labels, mode):
         inputs=inputs,
         filters=64,
         kernel_size=[5, 5],
-        padding="same",
-        activation=tf.nn.relu
+        strides=[1, 1],
+        padding="same"
+        use_bias=False
     )
+    # Batch Normalization Layer #2
+    # Input Tensor Shape: [batch_size, 14, 14, 64]
+    # Output Tensor Shape: [batch_size, 14, 14, 64]
+    inputs = tf.layers.batch_normalization(
+        inputs=inputs,
+        axis=-1,
+        training=mode == tf.estimator.ModeKeys.TRAIN
+    )
+    # Activation Layer #2
+    # Input Tensor Shape: [batch_size, 14, 14, 64]
+    # Output Tensor Shape: [batch_size, 14, 14, 64]
+    inputs = tf.nn.relu(inputs)
     # Pooling Layer #2
     # Second max pooling layer with a 2x2 filter and stride of 2
     # Input Tensor Shape: [batch_size, 14, 14, 64]
@@ -60,32 +87,18 @@ def cnn_model_fn(features, labels, mode):
     inputs = tf.layers.max_pooling2d(
         inputs=inputs,
         pool_size=[2, 2],
-        strides=[2, 2]
+        strides=[2, 2],
+        padding="same"
     )
-    # Flatten tensor into a batch of vectors
-    # Input Tensor Shape: [batch_size, 7, 7, 64]
-    # Output Tensor Shape: [batch_size, 7 * 7 * 64]
-    inputs = tf.reshape(
-        tensor=inputs,
-        shape=[-1, 7 * 7 * 64]
-    )
-    # Dense Layer
-    # Densely connected layer with 1024 neurons
+    # Global Average Layer
     # Input Tensor Shape: [batch_size, 7 * 7 * 64]
-    # Output Tensor Shape: [batch_size, 1024]
-    inputs = tf.layers.dense(
-        inputs=inputs,
-        units=1024,
-        activation=tf.nn.relu
-    )
-    # Add dropout operation; 0.6 probability that element will be kept
-    inputs = tf.layers.dropout(
-        inputs=inputs,
-        rate=0.4,
-        training=mode == tf.estimator.ModeKeys.TRAIN
+    # Output Tensor Shape: [batch_size, 64]
+    inputs = tf.reduce_mean(
+        input_tensor=inputs,
+        axis=[1, 2]
     )
     # Logits layer
-    # Input Tensor Shape: [batch_size, 1024]
+    # Input Tensor Shape: [batch_size, 64]
     # Output Tensor Shape: [batch_size, 10]
     logits = tf.layers.dense(
         inputs=inputs,
