@@ -155,7 +155,7 @@ def main(unused_argv):
     print(tf.estimator.train_and_evaluate(
         estimator=tf.estimator.Estimator(
             model_fn=cnn_model_fn,
-            model_dir="mnist_convnet_model"
+            model_dir="mnist_eve_model",
             params=dict(
                 optimizer=eve.EveOptimizer()
             )
@@ -189,7 +189,7 @@ def main(unused_argv):
     print(tf.estimator.train_and_evaluate(
         estimator=tf.estimator.Estimator(
             model_fn=cnn_model_fn,
-            model_dir="mnist_convnet_model"
+            model_dir="mnist_adam_model",
             params=dict(
                 optimizer=tf.train.AdamOptimizer()
             )
