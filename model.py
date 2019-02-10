@@ -21,7 +21,8 @@ def cnn_classifier(features, labels, mode, params):
         kernel_size=[5, 5],
         strides=[1, 1],
         padding="same",
-        #activation=tf.nn.relu
+        use_bias=False,
+        # activation=tf.nn.relu
     )
     inputs = tf.layers.batch_normalization(
         inputs=inputs,
@@ -50,7 +51,8 @@ def cnn_classifier(features, labels, mode, params):
         kernel_size=[5, 5],
         strides=[1, 1],
         padding="same",
-        #activation=tf.nn.relu
+        use_bias=False,
+        # activation=tf.nn.relu
     )
     inputs = tf.layers.batch_normalization(
         inputs=inputs,
@@ -79,7 +81,8 @@ def cnn_classifier(features, labels, mode, params):
     inputs = tf.layers.dense(
         inputs=inputs,
         units=1024,
-        #activation=tf.nn.relu
+        use_bias=False,
+        # activation=tf.nn.relu
     )
     inputs = tf.layers.batch_normalization(
         inputs=inputs,
