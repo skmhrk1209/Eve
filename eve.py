@@ -89,7 +89,7 @@ class EveOptimizer(optimizer.Optimizer):
 
     def __init__(self, alpha1=1e-3, beta1=0.9, beta2=0.999, beta3=0.999,
                  clip_value=10, epsilon=1e-8, use_locking=False, name="Adam"):
-        """Construct a new Adam optimizer.
+        """Construct a new Eve optimizer.
         Initialization:
         $$m_0 := 0 \text{(Initialize initial 1st moment vector)}$$
         $$v_0 := 0 \text{(Initialize initial 2nd moment vector)}$$
