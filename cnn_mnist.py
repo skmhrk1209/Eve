@@ -151,7 +151,7 @@ def main(unused_argv):
     train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
     eval_data = np.asarray(mnist.test.images, dtype=np.float32)
     eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
-    # Train and evaluate the model
+    # Train and evaluate the model with Eve
     print(tf.estimator.train_and_evaluate(
         estimator=tf.estimator.Estimator(
             model_fn=cnn_model_fn,
@@ -186,6 +186,7 @@ def main(unused_argv):
             steps=None
         )
     ))
+    # Train and evaluate the model with Adam
     print(tf.estimator.train_and_evaluate(
         estimator=tf.estimator.Estimator(
             model_fn=cnn_model_fn,
