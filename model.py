@@ -21,8 +21,14 @@ def cnn_classifier(features, labels, mode, params):
         kernel_size=[5, 5],
         strides=[1, 1],
         padding="same",
-        activation=tf.nn.relu
+        #activation=tf.nn.relu
     )
+    inputs = tf.layers.batch_normalization(
+        inputs=inputs,
+        axis=-1,
+        training=mode == tf.estimator.ModeKeys.TRAIN
+    )
+    inputs = tf.nn.relu(inputs)
     # Pooling Layer #1
     # First max pooling layer with a 2x2 filter and stride of 2
     # Input Tensor Shape: [batch_size, 28, 28, 32]
@@ -44,8 +50,14 @@ def cnn_classifier(features, labels, mode, params):
         kernel_size=[5, 5],
         strides=[1, 1],
         padding="same",
-        activation=tf.nn.relu
+        #activation=tf.nn.relu
     )
+    inputs = tf.layers.batch_normalization(
+        inputs=inputs,
+        axis=-1,
+        training=mode == tf.estimator.ModeKeys.TRAIN
+    )
+    inputs = tf.nn.relu(inputs)
     # Pooling Layer #2
     # Second max pooling layer with a 2x2 filter and stride of 2
     # Input Tensor Shape: [batch_size, 14, 14, 64]
@@ -67,8 +79,14 @@ def cnn_classifier(features, labels, mode, params):
     inputs = tf.layers.dense(
         inputs=inputs,
         units=1024,
-        activation=tf.nn.relu
+        #activation=tf.nn.relu
     )
+    inputs = tf.layers.batch_normalization(
+        inputs=inputs,
+        axis=-1,
+        training=mode == tf.estimator.ModeKeys.TRAIN
+    )
+    inputs = tf.nn.relu(inputs)
     # Logits layer
     # Input Tensor Shape: [batch_size, 64]
     # Output Tensor Shape: [batch_size, 10]
