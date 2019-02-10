@@ -11,7 +11,7 @@ import eve
 tf.logging.set_verbosity(tf.logging.INFO)
 
 
-def cnn_model_fn(features, labels, mode):
+def cnn_model_fn(features, labels, mode, params):
     """Model function for CNN."""
     # Input Layer
     # Reshape X to 4-D tensor: [batch_size, width, height, channels]
@@ -125,7 +125,7 @@ def cnn_model_fn(features, labels, mode):
             return tf.estimator.EstimatorSpec(
                 mode=mode,
                 loss=loss,
-                train_op=eve.EveOptimizer().minimize(
+                train_op=params["optimizer"].minimize(
                     loss=loss,
                     global_step=tf.train.get_global_step()
                 )
@@ -151,38 +151,75 @@ def main(unused_argv):
     train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
     eval_data = np.asarray(mnist.test.images, dtype=np.float32)
     eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
-    # Create the Estimator
-    mnist_classifier = tf.estimator.Estimator(
-        model_fn=cnn_model_fn,
-        model_dir="mnist_convnet_model"
-    )
-    # Train the model
-    mnist_classifier.train(
-        input_fn=tf.estimator.inputs.numpy_input_fn(
-            x={"x": train_data},
-            y=train_labels,
-            batch_size=100,
-            num_epochs=None,
-            shuffle=True
-        ),
-        steps=20000,
-        hooks=[
-            tf.train.LoggingTensorHook(
-                tensors={"probabilities": "softmax"},
-                every_n_iter=100
+    # Train and evaluate the model
+    print(tf.estimator.train_and_evaluate(
+        estimator=tf.estimator.Estimator(
+            model_fn=cnn_model_fn,
+            model_dir="mnist_convnet_model"
+            params=dict(
+                optimizer=eve.EveOptimizer()
             )
-        ]
-    )
-    # Evaluate the model and print results
-    eval_results = mnist_classifier.evaluate(
-        input_fn=tf.estimator.inputs.numpy_input_fn(
-            x={"x": eval_data},
-            y=eval_labels,
-            num_epochs=1,
-            shuffle=False
+        ),
+        train_spec=tf.estimator.TrainSpec(
+            input_fn=tf.estimator.inputs.numpy_input_fn(
+                x={"x": train_data},
+                y=train_labels,
+                batch_size=100,
+                num_epochs=None,
+                shuffle=True
+            ),
+            max_steps=20000,
+            hooks=[
+                tf.train.LoggingTensorHook(
+                    tensors={"probabilities": "softmax"},
+                    every_n_iter=100
+                )
+            ]
+        ),
+        eval_spec=tf.estimator.EvalSpec(
+            input_fn=tf.estimator.inputs.numpy_input_fn(
+                x={"x": eval_data},
+                y=eval_labels,
+                num_epochs=1,
+                shuffle=False
+            ),
+            steps=None
         )
-    )
-    print(eval_results)
+    ))
+    print(tf.estimator.train_and_evaluate(
+        estimator=tf.estimator.Estimator(
+            model_fn=cnn_model_fn,
+            model_dir="mnist_convnet_model"
+            params=dict(
+                optimizer=tf.train.AdamOptimizer()
+            )
+        ),
+        train_spec=tf.estimator.TrainSpec(
+            input_fn=tf.estimator.inputs.numpy_input_fn(
+                x={"x": train_data},
+                y=train_labels,
+                batch_size=100,
+                num_epochs=None,
+                shuffle=True
+            ),
+            max_steps=20000,
+            hooks=[
+                tf.train.LoggingTensorHook(
+                    tensors={"probabilities": "softmax"},
+                    every_n_iter=100
+                )
+            ]
+        ),
+        eval_spec=tf.estimator.EvalSpec(
+            input_fn=tf.estimator.inputs.numpy_input_fn(
+                x={"x": eval_data},
+                y=eval_labels,
+                num_epochs=1,
+                shuffle=False
+            ),
+            steps=None
+        )
+    ))
 
 
 if __name__ == "__main__":
