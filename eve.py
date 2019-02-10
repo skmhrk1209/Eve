@@ -79,7 +79,7 @@ def get_processor(var):
 
 class EveOptimizer(optimizer.Optimizer):
     """Optimizer that implements the Eve algorithm.
-    See [Kingma et al., 2014](https://arxiv.org/pdf/1611.01505.pdf)
+    See [Hayashi et al., 2016](https://arxiv.org/pdf/1611.01505.pdf)
     """
 
     # Values for gate_gradients.
