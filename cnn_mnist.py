@@ -104,15 +104,15 @@ def cnn_model_fn(features, labels, mode, params):
         inputs=inputs,
         units=10
     )
-    # Generate predictions (for PREDICT and EVAL mode)
-    classes = tf.argmax(
-        input=logits,
-        axis=1
-    ),
     # Add `softmax` to the graph. It is used by the `logging_hook`.
     probabilities = tf.nn.softmax(
         logits=logits,
         name="softmax"
+    )
+    # Generate predictions (for PREDICT and EVAL mode)
+    classes = tf.argmax(
+        input=probabilities,
+        axis=-1
     )
     # Calculate Loss (for both TRAIN and EVAL modes)
     loss = tf.losses.sparse_softmax_cross_entropy(
@@ -147,9 +147,9 @@ def cnn_model_fn(features, labels, mode, params):
 def main(unused_argv):
     # Load training and eval data
     mnist = tf.contrib.learn.datasets.load_dataset("mnist")
-    train_data = np.asarray(mnist.train.images, dtype=np.float32)
+    train_images = np.asarray(mnist.train.images, dtype=np.float32)
     train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
-    eval_data = np.asarray(mnist.test.images, dtype=np.float32)
+    eval_images = np.asarray(mnist.test.images, dtype=np.float32)
     eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
     # Train and evaluate the model with Eve
     print(tf.estimator.train_and_evaluate(
@@ -162,7 +162,7 @@ def main(unused_argv):
         ),
         train_spec=tf.estimator.TrainSpec(
             input_fn=tf.estimator.inputs.numpy_input_fn(
-                x={"x": train_data},
+                x={"x": train_images},
                 y=train_labels,
                 batch_size=100,
                 num_epochs=None,
@@ -178,7 +178,7 @@ def main(unused_argv):
         ),
         eval_spec=tf.estimator.EvalSpec(
             input_fn=tf.estimator.inputs.numpy_input_fn(
-                x={"x": eval_data},
+                x={"x": eval_images},
                 y=eval_labels,
                 num_epochs=1,
                 shuffle=False
@@ -197,7 +197,7 @@ def main(unused_argv):
         ),
         train_spec=tf.estimator.TrainSpec(
             input_fn=tf.estimator.inputs.numpy_input_fn(
-                x={"x": train_data},
+                x={"x": train_images},
                 y=train_labels,
                 batch_size=100,
                 num_epochs=None,
@@ -213,7 +213,7 @@ def main(unused_argv):
         ),
         eval_spec=tf.estimator.EvalSpec(
             input_fn=tf.estimator.inputs.numpy_input_fn(
-                x={"x": eval_data},
+                x={"x": eval_images},
                 y=eval_labels,
                 num_epochs=1,
                 shuffle=False
