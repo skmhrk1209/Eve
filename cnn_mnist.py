@@ -30,7 +30,7 @@ def cnn_model_fn(features, labels, mode):
         filters=32,
         kernel_size=[5, 5],
         strides=[1, 1],
-        padding="same"
+        padding="same",
         use_bias=False
     )
     # Batch Normalization Layer #1
@@ -65,7 +65,7 @@ def cnn_model_fn(features, labels, mode):
         filters=64,
         kernel_size=[5, 5],
         strides=[1, 1],
-        padding="same"
+        padding="same",
         use_bias=False
     )
     # Batch Normalization Layer #2
