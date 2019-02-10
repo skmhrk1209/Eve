@@ -116,19 +116,16 @@ def cnn_model_fn(features, labels, mode):
             name="softmax_tensor"
         )
     )
-
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(
             mode=mode,
             predictions=predictions
         )
-
     # Calculate Loss (for both TRAIN and EVAL modes)
     loss = tf.losses.sparse_softmax_cross_entropy(
         labels=labels,
         logits=logits
     )
-
     # Configure the Training Op (for TRAIN mode)
     if mode == tf.estimator.ModeKeys.TRAIN:
         return tf.estimator.EstimatorSpec(
@@ -139,7 +136,6 @@ def cnn_model_fn(features, labels, mode):
                 global_step=tf.train.get_global_step()
             )
         )
-
     # Add evaluation metrics (for EVAL mode)
     if mode == tf.estimator.ModeKeys.EVAL:
         return tf.estimator.EstimatorSpec(
@@ -161,13 +157,11 @@ def main(unused_argv):
     train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
     eval_data = np.asarray(mnist.test.images, dtype=np.float32)
     eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
-
     # Create the Estimator
     mnist_classifier = tf.estimator.Estimator(
         model_fn=cnn_model_fn,
         model_dir="mnist_convnet_model"
     )
-
     # Train the model
     mnist_classifier.train(
         input_fn=tf.estimator.inputs.numpy_input_fn(
@@ -185,7 +179,6 @@ def main(unused_argv):
             )
         ]
     )
-
     # Evaluate the model and print results
     eval_results = mnist_classifier.evaluate(
         input_fn=tf.estimator.inputs.numpy_input_fn(
@@ -195,7 +188,6 @@ def main(unused_argv):
             shuffle=False
         )
     )
-
     print(eval_results)
 
 
