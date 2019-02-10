@@ -63,7 +63,7 @@ def _get_processor(var):
         else:
             return optimizer._DenseResourceVariableProcessor(var)
     if isinstance(var, resource_variable_ops.ResourceVariable) and not var._in_graph_mode:
-        # True if and only if `v` was initialized eagerly.
+        # True if and only if `var` was initialized eagerly.
         return optimizer._DenseResourceVariableProcessor(var)
     if var.op.type == "VarHandleOp":
         return optimizer._DenseResourceVariableProcessor(var)
