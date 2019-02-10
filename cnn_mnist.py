@@ -151,20 +151,6 @@ def main(unused_argv):
     train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
     eval_images = np.asarray(mnist.test.images, dtype=np.float32)
     eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
-    tf.estimator.Estimator(
-        model_fn=cnn_model_fn,
-        model_dir="mnist_eve_model",
-        params=dict(
-            optimizer=eve.EveOptimizer()
-        )
-    ).evaluate(
-        input_fn=tf.estimator.inputs.numpy_input_fn(
-            x={"x": eval_images},
-            y=eval_labels,
-            num_epochs=1,
-            shuffle=False
-        )
-    )
     # Train and evaluate the model with Eve
     print(tf.estimator.train_and_evaluate(
         estimator=tf.estimator.Estimator(
