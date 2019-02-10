@@ -105,22 +105,15 @@ def cnn_model_fn(features, labels, mode):
         units=10
     )
     # Generate predictions (for PREDICT and EVAL mode)
-    # Add `softmax_tensor` to the graph. It is used for PREDICT and by the `logging_hook`.
-    predictions = dict(
-        classes=tf.argmax(
-            input=logits,
-            axis=1
-        ),
-        probabilities=tf.nn.softmax(
-            logits=logits,
-            name="softmax_tensor"
-        )
+    classes = tf.argmax(
+        input=logits,
+        axis=1
+    ),
+    # Add `softmax` to the graph. It is used by the `logging_hook`.
+    probabilities = tf.nn.softmax(
+        logits=logits,
+        name="softmax"
     )
-    if mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(
-            mode=mode,
-            predictions=predictions
-        )
     # Calculate Loss (for both TRAIN and EVAL modes)
     loss = tf.losses.sparse_softmax_cross_entropy(
         labels=labels,
@@ -128,14 +121,15 @@ def cnn_model_fn(features, labels, mode):
     )
     # Configure the Training Op (for TRAIN mode)
     if mode == tf.estimator.ModeKeys.TRAIN:
-        return tf.estimator.EstimatorSpec(
-            mode=mode,
-            loss=loss,
-            train_op=eve.EveOptimizer().minimize(
+        with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
+            return tf.estimator.EstimatorSpec(
+                mode=mode,
                 loss=loss,
-                global_step=tf.train.get_global_step()
+                train_op=eve.EveOptimizer().minimize(
+                    loss=loss,
+                    global_step=tf.train.get_global_step()
+                )
             )
-        )
     # Add evaluation metrics (for EVAL mode)
     if mode == tf.estimator.ModeKeys.EVAL:
         return tf.estimator.EstimatorSpec(
@@ -144,7 +138,7 @@ def cnn_model_fn(features, labels, mode):
             eval_metric_ops=dict(
                 accuracy=tf.metrics.accuracy(
                     labels=labels,
-                    predictions=predictions["classes"]
+                    predictions=classes
                 )
             )
         )
