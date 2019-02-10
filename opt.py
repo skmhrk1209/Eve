@@ -13,25 +13,10 @@ from tensorflow.python.ops import state_ops
 from tensorflow.python.training import optimizer
 from tensorflow.python.training import training_ops
 from tensorflow.python.util.tf_export import tf_export
-from tensorflow.python.training.optimizer import *
 import tensorflow as tf
 
 
-class OptimizableVariable(object):
-    """Interface for abstracting over variables in the optimizers."""
-
-    @abc.abstractmethod
-    def target(self):
-        """Returns the optimization target for this variable."""
-        raise NotImplementedError("Calling an abstract method.")
-
-    @abc.abstractmethod
-    def update_op(self, optimizer, grad):
-        """Returns the update ops for updating the variable."""
-        raise NotImplementedError("Calling an abstract method.")
-
-
-class RefVariableProcessor(OptimizableVariable):
+class _RefVariableProcessor(optimizer._OptimizableVariable):
     """Processor for Variable."""
 
     def __init__(self, var):
@@ -56,25 +41,6 @@ class RefVariableProcessor(OptimizableVariable):
             if self.var.constraint is not None:
                 raise RuntimeError("Cannot use a constraint function on a sparse variable.")
             return optimizer._apply_sparse_duplicate_indices(grad, self.var)
-
-
-def get_processor(var):
-    """The processor of var"""
-    if context.executing_eagerly():
-        if isinstance(var, ops.Tensor):
-            return _TensorProcessor(var)
-        else:
-            return _DenseResourceVariableProcessor(var)
-    if isinstance(var, resource_variable_ops.ResourceVariable) and not var._in_graph_mode:
-        # True if and only if `v` was initialized eagerly.
-        return _DenseResourceVariableProcessor(var)
-    if var.op.type == "VarHandleOp":
-        return _DenseResourceVariableProcessor(var)
-    if isinstance(var, variables.Variable):
-        return RefVariableProcessor(var)
-    if isinstance(var, ops.Tensor):
-        return _TensorProcessor(var)
-    raise NotImplementedError("Trying to optimize unsupported type ", var)
 
 
 class EveOptimizer(optimizer.Optimizer):
