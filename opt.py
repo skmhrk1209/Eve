@@ -4,6 +4,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 from tensorflow.python.eager import context
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import control_flow_ops
@@ -13,6 +17,7 @@ from tensorflow.python.ops import state_ops
 from tensorflow.python.training import optimizer
 from tensorflow.python.training import training_ops
 from tensorflow.python.util.tf_export import tf_export
+
 import tensorflow as tf
 
 
@@ -41,6 +46,25 @@ class _RefVariableProcessor(optimizer._OptimizableVariable):
             if self.var.constraint is not None:
                 raise RuntimeError("Cannot use a constraint function on a sparse variable.")
             return optimizer._apply_sparse_duplicate_indices(grad, self.var)
+
+
+def _get_processor(var):
+    """The processor of var."""
+    if context.executing_eagerly():
+        if isinstance(var, ops.Tensor):
+            return optimizer._TensorProcessor(var)
+        else:
+            return optimizer._DenseResourceVariableProcessor(var)
+    if isinstance(var, resource_variable_ops.ResourceVariable) and not var._in_graph_mode:
+        # True if and only if `v` was initialized eagerly.
+        return optimizer._DenseResourceVariableProcessor(var)
+    if var.op.type == "VarHandleOp":
+        return optimizer._DenseResourceVariableProcessor(var)
+    if isinstance(var, variables.Variable):
+        return _RefVariableProcessor(var)
+    if isinstance(var, ops.Tensor):
+        return optimizer._TensorProcessor(var)
+    raise NotImplementedError("Trying to optimize unsupported type ", var)
 
 
 class EveOptimizer(optimizer.Optimizer):
@@ -229,7 +253,7 @@ class EveOptimizer(optimizer.Optimizer):
         # always calling _distributed_apply(), using the default distribution
         # as needed.
         if distribution_strategy_context.has_distribution_strategy():
-            grads_and_vars = get_filtered_grad_fn(lambda: grads_and_vars)()
+            grads_and_vars = optimizer.get_filtered_grad_fn(lambda: grads_and_vars)()
             return distribution_strategy_context.get_tower_context().merge_call(
                 self._distributed_apply, grads_and_vars, global_step, name
             )
@@ -248,7 +272,7 @@ class EveOptimizer(optimizer.Optimizer):
                     raise TypeError("Gradient must be convertible to a Tensor or IndexedSlices, or None: %s" % grad)
                 if not isinstance(grad, (ops.Tensor, ops.IndexedSlices)):
                     raise TypeError("Gradient must be a Tensor, IndexedSlices, or None: %s" % grad)
-            processor = get_processor(var)
+            processor = _get_processor(var)
             converted_grads_and_vars.append((grad, var, processor))
 
         converted_grads_and_vars = tuple(converted_grads_and_vars)
