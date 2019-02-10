@@ -56,12 +56,18 @@ def cnn_classifier(features, labels, mode, params):
         strides=[2, 2],
         padding="same"
     )
-    # Global Average Layer
+    # Flatten tensor into a batch of vectors
+    # Input Tensor Shape: [batch_size, 7, 7, 64]
+    # Output Tensor Shape: [batch_size, 7 * 7 * 64]
+    inputs = tf.layers.flatten(inputs)
+    # Dense Layer
+    # Densely connected layer with 1024 neurons
     # Input Tensor Shape: [batch_size, 7 * 7 * 64]
-    # Output Tensor Shape: [batch_size, 64]
-    inputs = tf.reduce_mean(
-        input_tensor=inputs,
-        axis=[1, 2]
+    # Output Tensor Shape: [batch_size, 1024]
+    inputs = tf.layers.dense(
+        inputs=inputs,
+        units=1024,
+        activation=tf.nn.relu
     )
     # Logits layer
     # Input Tensor Shape: [batch_size, 64]
