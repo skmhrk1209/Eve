@@ -24,7 +24,7 @@ def main(unused_argv):
                 num_epochs=None,
                 shuffle=True
             ),
-            max_steps=1,
+            max_steps=20000,
             hooks=[tf.train.LoggingTensorHook(
                 tensors={"probabilities": "softmax"},
                 every_n_iter=100
